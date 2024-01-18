@@ -16,18 +16,18 @@ PS> .\AutoADenum.ps1 -PDC "DC1.green.com" -DN "DC=green,DC=com"
 
 #What information does it collect?
 Users:
-    All Users
-    Description (Yellow Color)
+    All Users ,
+    Description (Yellow Color) ,
     SPN (Green Color)
 
 Machines:
-    DNS Hostname
-    Operating System
+    DNS Hostname ,
+    Operating System ,
     OS Version
 
 Groups:
-    Custom Group (Green Color)
-    Active Directory Security Groups (Red Color)
+    Custom Group (Green Color) ,
+    Active Directory Security Groups (Red Color) 
 
 In general, it gathers a variety of information, but you can specify the details you want to collect
 
