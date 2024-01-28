@@ -18,7 +18,8 @@ PS> .\AutoADenum.ps1 -PDC "DC1.green.com" -DN "DC=green,DC=com"
 Users:
     All Users ,
     Description (Yellow Color) ,
-    SPN (Green Color)
+    SPN (Green Color),
+    DONT REQ PREAUTH (Red Color)
 
 Machines:
     DNS Hostname ,
