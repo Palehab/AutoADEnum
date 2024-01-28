@@ -1,7 +1,9 @@
 Param(
 	[string]$PDC = [System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain().PdcRoleOwner.name ,
 	[string]$DN = ([adsi]'').distinguishedName ,
-	[string]$ObjType = ''
+	[string]$ObjType = '',
+	[string]$Propertie = '',
+	[string]$Name = ''
 )
 $LDAPpath = "LDAP://$pdc/$dn"
 $Entry = New-Object System.DirectoryServices.DirectoryEntry("$LDAPpath")
@@ -9,51 +11,97 @@ $Entry = New-Object System.DirectoryServices.DirectoryEntry("$LDAPpath")
 
 
 function Users-S {
-	$SPNList = @()
-	$DirSerUsers = New-Object System.DirectoryServices.DirectorySearcher($Entry,"samAccountType=805306368")
+	$DirSerUsers = New-Object System.DirectoryServices.DirectorySearcher($Entry,"(&(objectCategory=User)(objectClass=User)(samAccountType=805306368))")
 	$Users = $DirSerUsers.FindALL()
+	if($Propertie -ne '' -and $Propertie -ne "*" -and $Name -ne ''){
+		$Obj = $Users | Where-Object { $_.Properties["sAMAccountName"] -eq "$Name" -or $_.Properties["cn"] -eq "$Name"}
+		$Obj.Properties["$Propertie"]
+		break
+	}
+	if($Propertie -eq "*" -and $Name -ne ''){
+		$Obj = $Users | Where-Object { $_.Properties["sAMAccountName"] -eq "$Name" -or $_.Properties["cn"] -eq "$Name"}
+		$Obj.Properties
+		break
+	}
+	else{
 
+	$SPNList = @()
 	Write-Host -BackgroundColor Yellow  -ForegroundColor Red "-------------- Users -----------------"
 	foreach( $User in $Users ){
-	
-		if($User.Properties.serviceprincipalname -ne $null){
+		$userAccountControl = [int]$User.Properties["userAccountControl"][0]
+		if($User.Properties["serviceprincipalname"] -ne $null){
 		$SPNList += $User
 		}else {
-		write-host "=> "$User.Properties.cn
-		if($User.Properties.description -ne $null ){
-			write-host  -ForegroundColor Yellow "Comment : "$User.Properties.description
-			write-host "-----------------------------------"
+			
+			
+			if($User.Properties["description"] -ne $null ){
+				write-host "=> "$User.Properties["sAMAccountName"]
+				write-host  -ForegroundColor Yellow "Comment : "$User.Properties.description
+				
+				}
+			if(($userAccountControl -band 0x400000) -eq 0x400000){
+				write-host "=> "$User.Properties["sAMAccountName"] -ForegroundColor Red " <= AS-REP Roasting"
+				 
+				
+				}
+			 
+		        else{
+			write-host "=> "$User.Properties["sAMAccountName"]
+				}
 			}
-	}
-	
 	
 	}
+	
 	write-host "----------------ServicePrincipalName-------------------"
 	foreach ($SPN in $SPNList){
-		write-host  -ForegroundColor Green "SPN : "$SPN.Properties.serviceprincipalname
-		write-host  -ForegroundColor Green "SPN-Name : "$SPN.Properties.name
+		write-host  -ForegroundColor Green "SPN : "$SPN.Properties["serviceprincipalname"]
+		write-host  -ForegroundColor Green "SPN-Name : "$SPN.Properties["sAMAccountName"]
+		if($SPN.Properties.description -ne $null ){
+			write-host  -ForegroundColor Yellow "Comment : "$SPN.Properties["description"]		
+		}
 		write-host "MemberOF : "
-		$SPN.Properties.memberof
+		$SPN.Properties["memberof"]
 		write-host "-----------------------------------"
-	}
+	}}
 	
 }
 function Machines-S {
-	$DirSerMachines = New-Object System.DirectoryServices.DirectorySearcher($Entry,"samAccountType=805306369")
+	$DirSerMachines = New-Object System.DirectoryServices.DirectorySearcher($Entry,"(&(objectCategory=computer)(objectClass=computer)(samAccountType=805306369))")
 	$Machines = $DirSerMachines.FindALL()
+	if($Propertie -ne '' -and $Propertie -ne "*" -and $Name -ne ''){
+		$Obj = $Machines | Where-Object { $_.Properties["sAMAccountName"] -eq "$Name" -or $_.Properties["cn"] -eq "$Name"}
+		$Obj.Properties["$Propertie"]
+		break
+	}
+	if($Propertie -eq "*" -and $Name -ne ''){
+		$Obj = $Machines | Where-Object { $_.Properties["sAMAccountName"] -eq "$Name" -or $_.Properties["cn"] -eq "$Name"}
+		$Obj.Properties
+		break
+	}
+	else{
 	Write-Host -BackgroundColor Yellow  -ForegroundColor Red "-------------  Machine ------------------"
 	foreach( $Machine in $Machines ){
-		write-host " Name : " $Machine.Properties.cn
-		write-host " DNShostName : " $Machine.Properties.dnshostname
-		write-host " OperatingSystem : " $Machine.Properties.operatingsystem
-		write-host " OS-Version : " $Machine.Properties.operatingsystemversion
+		write-host " sAMAccountName : " $Machine.Properties["sAMAccountName"]
+		write-host " DNShostName : " $Machine.Properties["dnshostname"]
+		write-host " OperatingSystem : " $Machine.Properties["operatingsystem"]
+		write-host " OS-Version : " $Machine.Properties["operatingsystemversion"]
 		Write-Host "--------------------"
 }
 	
-}
+}}
 function Groups-S {
-	$DirSerGroups = New-Object System.DirectoryServices.DirectorySearcher($Entry,"objectCategory=group")
+	$DirSerGroups = New-Object System.DirectoryServices.DirectorySearcher($Entry,"(&(objectCategory=group)(objectClass=group))")
 	$Groups = $DirSerGroups.FindALL()
+	if($Propertie -ne '' -and $Propertie -ne "*" -and $Name -ne ''){
+		$Obj = $Groups | Where-Object { $_.Properties["sAMAccountName"] -eq "$Name" -or $_.Properties["cn"] -eq "$Name"}
+		$Obj.Properties["$Propertie"]
+		break
+	}
+	if($Propertie -eq "*" -and $Name -ne ''){
+		$Obj = $Groups | Where-Object { $_.Properties["sAMAccountName"] -eq "$Name" -or $_.Properties["cn"] -eq "$Name"}
+		$Obj.Properties
+		break
+	}else{
 	Write-Host  -BackgroundColor Yellow  -ForegroundColor Red "-------------- Groups -----------------"
 	foreach( $Group in $Groups ){
 	
@@ -62,7 +110,7 @@ function Groups-S {
 		$GroupName =""
 		Foreach ($DefaultGroup in $GroupList){
 			
-			if( $Group.Properties.name -eq $DefaultGroup ){
+			if( $Group.Properties["sAMAccountName"] -eq $DefaultGroup ){
 			$S  = $true
 			
 			break	
@@ -74,11 +122,11 @@ function Groups-S {
 		
 		Write-Host -ForegroundColor Red  $Group.Properties.cn
 		}else{
-		Write-Host -ForegroundColor Green  $Group.Properties.cn  "<=Custom Group"
+		Write-Host -ForegroundColor Green  $Group.Properties["sAMAccountName"]  "<=Custom Group"
 		Write-Host -ForegroundColor yellow "Member : "
-		 $Group.Properties.member
+		 $Group.Properties["member"]
 		Write-Host  -ForegroundColor yellow "MemberOF : "
-		 $Group.Properties.memberof
+		 $Group.Properties["memberof"]
 		
 		
 		}
@@ -86,7 +134,7 @@ function Groups-S {
 	}
 	
 
-}
+}}
 
 $GroupList = @(
 "Access Control Assistance Operators",
@@ -137,6 +185,7 @@ $GroupList = @(
 "Server Operators",
 "Storage Replica Administrators",
 "System Managed Accounts",
+"System Managed Accounts Group",
 "Terminal Server License Servers",
 "Users",
 "Windows Authorization Access",
