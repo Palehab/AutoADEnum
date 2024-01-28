@@ -50,4 +50,14 @@ PS> .\AutoADenum.ps1 -ObjType G
 ![Groups](https://github.com/Palehab/AutoADEnum/blob/main/images/Groups.png)
 
 
+display either a specific property or all properties of the object
+```powershell
+PS> .\AutoADenum.ps1 -ObjType M -Propertie "*" -Name DC1
+```
+```powershell
+PS> .\AutoADenum.ps1 -ObjType M -Propertie "DNShostname" -Name DC1
+```
+![Groups](https://github.com/Palehab/AutoADEnum/blob/main/images/filter.png)
+
+
   
